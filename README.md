@@ -1,3 +1,46 @@
+# Construction Site PPE Detection System
+
+Real-time Personal Protective Equipment detection for construction sites using YOLOv8s.
+Detects 9 PPE classes simultaneously from webcam or video feed, with live dashboard and Power BI reporting.
+
+---
+
+## Final Results - Experiment 5
+
+| Metric | Value |
+|---|---|
+| Model | YOLOv8s (11M parameters) |
+| Dataset | 82,459 images from 5 Roboflow sources |
+| Classes | 9 |
+| Overall mAP@0.5 | **82.9%** |
+| Inference speed | Under 3ms per frame |
+
+### Per-Class Performance
+
+| Class | mAP@0.5 |
+|---|---|
+| vest | 95.7% |
+| helmet | 95.0% |
+| no-helmet | 94.4% |
+| no-vest | 93.7% |
+| no-boots | 88.2% |
+| person | 77.8% |
+| boots | 76.7% |
+| gloves | 63.0% |
+| no-gloves | 61.3% |
+
+---
+
+## Project Structure
+
+    ppe-detection-yolov8/
+    ├── app.py                        # Flask backend
+    ├── templates/
+    │   └── index.html                # Dashboard UI
+    ├── requirements.txt              # Dependencies
+    ├── PPE_DetectionProject.ipynb    # Full training notebook
+    └── README.md
+
 ---
 
 ## Flask Webcam Application
