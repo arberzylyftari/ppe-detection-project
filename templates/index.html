@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PPE Detection System</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background: #0a0e1a;
+      color: #e0e6f0;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .page {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #0d1528, #111c35);
+      border-bottom: 2px solid #1e3a5f;
+      padding: 8px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 52px;
+      flex-shrink: 0;
+    }
+
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-icon {
+      width: 34px; height: 34px;
+      background: linear-gradient(135deg, #0066ff, #00aaff);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .logo-text h1 { font-size: 15px; font-weight: 700; color: #fff; }
+    .logo-text p  { font-size: 10px; color: #6b8cba; }
+
+    .live-badge {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(0,255,100,.1);
+      border: 1px solid rgba(0,255,100,.3);
+      padding: 4px 10px; border-radius: 20px;
+      font-size: 11px; color: #00ff88; font-weight: 600;
+    }
+    .live-dot {
+      width: 6px; height: 6px;
+      background: #00ff88; border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%,100%{opacity:1;transform:scale(1);}
+      50%{opacity:.4;transform:scale(.8);}
+    }
+    #clock { font-size: 11px; color: #4a6a8a; }
+
+    /* ── Content ── */
+    .content {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* ── Left col ── */
+    .left-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #1e3a5f;
+      min-width: 0;
+      min-height: 0;
+    }
+
+    .panel-header {
+      padding: 6px 12px;
+      background: #111c35;
+      border-bottom: 1px solid #1e3a5f;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+      height: 30px;
+    }
+    .panel-title {
+      font-size: 10px; font-weight: 600;
+      color: #8ab4e0; text-transform: uppercase; letter-spacing: 1px;
+    }
+
+    .video-wrap {
+      flex: 1;
+      background: #000;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 0;
+      overflow: hidden;
+      position: relative;
+    }
+    #video-feed {
+      width: 100%; height: 100%;
+      object-fit: contain; display: block;
+    }
+
+    /* Video ended overlay */
+    #video-ended-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.82);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      z-index: 10;
+    }
+    #video-ended-overlay.visible { display: flex; }
+
+    .ended-title {
+      font-size: 22px; font-weight: 800; color: #00aaff;
+      letter-spacing: 1px;
+    }
+    .ended-sub { font-size: 13px; color: #6b8cba; }
+
+    .ended-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      background: #111c35;
+      border: 1px solid #1e3a5f;
+      border-radius: 12px;
+      padding: 16px 24px;
+    }
+    .ended-stat { text-align: center; }
+    .ended-stat .val { font-size: 26px; font-weight: 800; color: #00aaff; }
+    .ended-stat .lbl { font-size: 10px; color: #4a6a8a; text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
+
+    .btn-report {
+      padding: 12px 28px;
+      background: linear-gradient(135deg, #0066ff, #0044cc);
+      color: white; border: none; border-radius: 10px;
+      font-size: 15px; font-weight: 700; cursor: pointer;
+      transition: all .2s;
+      box-shadow: 0 4px 20px rgba(0,100,255,.3);
+    }
+    .btn-report:hover { background: linear-gradient(135deg,#0077ff,#0055dd); transform: translateY(-1px); }
+
+    #report-status { font-size: 12px; color: #00ff88; min-height: 18px; }
+
+    .status-bar {
+      display: flex; align-items: center; gap: 18px;
+      padding: 5px 12px;
+      background: #0a0e1a;
+      border-top: 1px solid #1e3a5f;
+      flex-shrink: 0;
+      height: 30px;
+    }
+    .sm { display: flex; align-items: center; gap: 5px; }
+    .sm .lbl { font-size: 9px; color: #4a6a8a; text-transform: uppercase; letter-spacing:.5px; }
+    .sm .val { font-size: 12px; font-weight: 700; color: #00aaff; font-variant-numeric: tabular-nums; }
+
+    .controls {
+      display: flex; gap: 7px; padding: 6px 12px;
+      background: #111c35;
+      border-top: 1px solid #1e3a5f;
+      flex-shrink: 0;
+      height: 42px;
+      align-items: center;
+    }
+    .btn {
+      padding: 5px 12px; border-radius: 6px;
+      font-size: 11px; font-weight: 600;
+      cursor: pointer; border: none; transition: all .2s;
+      height: 28px;
+    }
+    .btn-primary   { background: linear-gradient(135deg,#0066ff,#0044cc); color:#fff; }
+    .btn-success   { background: linear-gradient(135deg,#00aa55,#008844); color:#fff; }
+    .btn-danger    { background: linear-gradient(135deg,#cc2222,#aa1111); color:#fff; }
+    .btn-secondary { background: #1e3a5f; color: #8ab4e0; border: 1px solid #2a4a6f; }
+    #upload-input  { display: none; }
+
+    /* Charts */
+    .charts-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      height: 150px;
+      border-top: 1px solid #1e3a5f;
+      flex-shrink: 0;
+    }
+    .chart-panel {
+      display: flex; flex-direction: column;
+      border-right: 1px solid #1e3a5f;
+      min-width: 0; overflow: hidden;
+    }
+    .chart-panel:last-child { border-right: none; }
+    .chart-panel .panel-header { height: 26px; }
+    .chart-canvas-wrap {
+      flex: 1; min-height: 0;
+      padding: 2px 8px 4px;
+      position: relative;
+    }
+    .chart-canvas-wrap canvas {
+      position: absolute;
+      top: 2px; left: 8px; right: 8px; bottom: 4px;
+      width: calc(100% - 16px) !important;
+      height: calc(100% - 6px) !important;
+    }
+
+    /* ── Right sidebar ── */
+    .right-col {
+      width: 280px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .violation-card {
+      padding: 12px 10px;
+      text-align: center;
+      border-bottom: 1px solid #1e3a5f;
+      flex-shrink: 0;
+      transition: all .3s;
+    }
+    .violation-card.safe {
+      background: linear-gradient(135deg,#091510,#0a1a10);
+      border-left: 3px solid #00aa55;
+    }
+    .violation-card.violation {
+      background: linear-gradient(135deg,#190d0d,#150a0a);
+      border-left: 3px solid #ff3333;
+      animation: vflash 1s infinite;
+    }
+    @keyframes vflash {
+      0%,100%{border-left-color:#ff3333;}
+      50%{border-left-color:#ff8888;}
+    }
+    .status-icon { font-size: 28px; margin-bottom: 2px; }
+    .status-text { font-size: 16px; font-weight: 800; letter-spacing: 1px; }
+    .status-text.safe      { color: #00ff88; }
+    .status-text.violation { color: #ff4444; }
+    .status-sub { font-size: 10px; color: #6b8cba; margin-top: 2px; }
+
+    .stats-grid-inner {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 1px; background: #1e3a5f;
+      border-bottom: 1px solid #1e3a5f;
+    }
+    .stat-cell { background: #0d1528; padding: 8px 10px; text-align: center; }
+    .stat-value { font-size: 18px; font-weight: 800; color: #00aaff; font-variant-numeric: tabular-nums; }
+    .stat-label { font-size: 9px; color: #4a6a8a; text-transform: uppercase; letter-spacing:.5px; margin-top:1px; }
+
+    .class-list {
+      padding: 5px 8px;
+      display: flex; flex-direction: column; gap: 2px;
+      border-bottom: 1px solid #1e3a5f;
+    }
+    .class-row {
+      display: flex; align-items: center; gap: 6px;
+      padding: 4px 7px; border-radius: 5px;
+      background: #111c35;
+    }
+    .class-dot   { width: 7px; height: 7px; border-radius: 50%; flex-shrink:0; }
+    .class-name  { font-size: 11px; color: #c0d4f0; flex:1; text-transform: capitalize; }
+    .class-count { font-size: 12px; font-weight: 700; min-width:18px; text-align:right; font-variant-numeric:tabular-nums; }
+
+    .screenshots-section { padding: 6px 10px; flex: 1; overflow-y: auto; }
+    .section-title {
+      font-size: 10px; font-weight: 600; color: #8ab4e0;
+      text-transform: uppercase; letter-spacing:1px; margin-bottom: 4px;
+    }
+    .screenshot-item {
+      font-size: 10px; color: #6b8cba;
+      padding: 3px 0; border-bottom: 1px solid #1a2a40;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .screenshot-item:last-child { border-bottom: none; }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #0a0e1a; }
+    ::-webkit-scrollbar-thumb { background: #1e3a5f; border-radius: 2px; }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🦺</div>
+      <div class="logo-text">
+        <h1>PPE Detection System</h1>
+        <p>YOLOv8s · Construction Site Safety Monitoring</p>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+      <span id="clock"></span>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- Left col -->
+    <div class="left-col">
+      <div class="panel-header">
+        <span class="panel-title">📹 Live Detection Feed</span>
+        <span style="font-size:10px;color:#4a6a8a;" id="source-label">Source: Webcam</span>
+      </div>
+
+      <div class="video-wrap">
+        <img id="video-feed" src="/video_feed" alt="feed" />
+
+        <!-- Video ended overlay -->
+        <div id="video-ended-overlay">
+          <div class="ended-title">🎬 Video Analysis Complete</div>
+          <div class="ended-sub">All frames processed. Summary below.</div>
+
+          <div class="ended-stats">
+            <div class="ended-stat">
+              <div class="val" id="ov-total">0</div>
+              <div class="lbl">Frames</div>
+            </div>
+            <div class="ended-stat">
+              <div class="val" id="ov-violations">0</div>
+              <div class="lbl">Violations</div>
+            </div>
+            <div class="ended-stat">
+              <div class="val" id="ov-rate">0%</div>
+              <div class="lbl">Violation Rate</div>
+            </div>
+          </div>
+
+          <button class="btn-report" onclick="generateReport()">
+            📊 Generate Excel Report
+          </button>
+          <div id="report-status"></div>
+        </div>
+      </div>
+
+      <div class="status-bar">
+        <div class="sm"><span class="lbl">FPS</span><span class="val" id="fps-val">--</span></div>
+        <div class="sm"><span class="lbl">Inference</span><span class="val" id="inf-val">-- ms</span></div>
+        <div class="sm"><span class="lbl">Frames</span><span class="val" id="frames-val">0</span></div>
+        <div class="sm"><span class="lbl">Screenshots</span><span class="val" id="screenshots-val">0</span></div>
+      </div>
+
+      <div class="controls">
+        <button class="btn btn-success"   onclick="switchWebcam()">📷 Webcam</button>
+        <button class="btn btn-primary"   onclick="document.getElementById('upload-input').click()">📁 Upload Video</button>
+        <input type="file" id="upload-input" accept="video/*" onchange="uploadVideo(this)" />
+        <button class="btn btn-danger"    id="stop-btn" onclick="toggleStream()">⏸ Pause</button>
+        <button class="btn btn-secondary" onclick="resetStats()">🔄 Reset</button>
+      </div>
+
+      <div class="charts-row">
+        <div class="chart-panel">
+          <div class="panel-header"><span class="panel-title">📈 Violations Over Time</span></div>
+          <div class="chart-canvas-wrap"><canvas id="violations-chart"></canvas></div>
+        </div>
+        <div class="chart-panel">
+          <div class="panel-header"><span class="panel-title">📊 Detections Per Class</span></div>
+          <div class="chart-canvas-wrap"><canvas id="detections-chart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right sidebar -->
+    <div class="right-col">
+
+      <div class="violation-card safe" id="violation-card">
+        <div class="status-icon" id="status-icon">✅</div>
+        <div class="status-text safe" id="status-text">ALL CLEAR</div>
+        <div class="status-sub" id="status-sub">All workers compliant</div>
+      </div>
+
+      <div class="panel-header"><span class="panel-title">📊 Session Stats</span></div>
+      <div class="stats-grid-inner">
+        <div class="stat-cell"><div class="stat-value" id="stat-violations">0</div><div class="stat-label">Violation Frames</div></div>
+        <div class="stat-cell"><div class="stat-value" id="stat-total">0</div><div class="stat-label">Total Frames</div></div>
+        <div class="stat-cell"><div class="stat-value" id="stat-rate">0%</div><div class="stat-label">Violation Rate</div></div>
+        <div class="stat-cell"><div class="stat-value" id="stat-screenshots">0</div><div class="stat-label">Saved Alerts</div></div>
+      </div>
+
+      <div class="panel-header" style="margin-top:1px;"><span class="panel-title">🎯 Current Detections</span></div>
+      <div class="class-list">
+        {% for cls in classes %}
+        <div class="class-row">
+          <div class="class-dot" style="background:{{ colors[cls] }};"></div>
+          <span class="class-name">{{ cls }}</span>
+          <span class="class-count" id="count-{{ cls }}" style="color:{{ colors[cls] }};">0</span>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="screenshots-section">
+        <div class="section-title">📸 Recent Violation Screenshots</div>
+        <div id="screenshots-list">
+          <div style="color:#4a6a8a;font-size:10px;font-style:italic;">No violations captured yet</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+function updateClock() { document.getElementById('clock').textContent = new Date().toLocaleTimeString(); }
+setInterval(updateClock, 1000); updateClock();
+
+const chartOpts = {
+  responsive: true, maintainAspectRatio: false,
+  animation: { duration: 200 },
+  plugins: { legend: { display: false } },
+  scales: {
+    x: { ticks: { color:'#4a6a8a', font:{size:8}, maxTicksLimit:5 }, grid: { color:'#1a2a40' } },
+    y: { ticks: { color:'#4a6a8a', font:{size:8} }, grid: { color:'#1a2a40' }, beginAtZero: true }
+  }
+};
+
+const violationsChart = new Chart(document.getElementById('violations-chart').getContext('2d'), {
+  type: 'line',
+  data: { labels:[], datasets:[{ data:[], borderColor:'#ff4444', backgroundColor:'rgba(255,68,68,0.12)', fill:true, tension:.4, pointRadius:1, borderWidth:2 }] },
+  options: chartOpts
+});
+
+const classes = {{ classes | tojson }};
+const colors  = {{ colors  | tojson }};
+
+const detectionsChart = new Chart(document.getElementById('detections-chart').getContext('2d'), {
+  type: 'bar',
+  data: {
+    labels: classes,
+    datasets:[{ data: classes.map(()=>0), backgroundColor: classes.map(c=>colors[c]+'99'), borderColor: classes.map(c=>colors[c]), borderWidth:1, borderRadius:3 }]
+  },
+  options: { ...chartOpts, scales: { ...chartOpts.scales, x: { ...chartOpts.scales.x, ticks:{ color:'#4a6a8a', font:{size:7}, maxRotation:30 } } } }
+});
+
+let videoEndedShown = false;
+
+async function fetchStats() {
+  try {
+    const res  = await fetch('/stats');
+    const data = await res.json();
+    const s    = data.stats;
+
+    document.getElementById('fps-val').textContent         = s.fps;
+    document.getElementById('inf-val').textContent         = s.inference_ms + ' ms';
+    document.getElementById('frames-val').textContent      = s.total_frames;
+    document.getElementById('screenshots-val').textContent = s.screenshots_saved;
+
+    const card = document.getElementById('violation-card');
+    const icon = document.getElementById('status-icon');
+    const text = document.getElementById('status-text');
+    const sub  = document.getElementById('status-sub');
+
+    if (s.violation) {
+      card.className='violation-card violation'; icon.textContent='🚨';
+      text.className='status-text violation'; text.textContent='VIOLATION!';
+      sub.textContent='Missing PPE - screenshot saved';
+    } else {
+      card.className='violation-card safe'; icon.textContent='✅';
+      text.className='status-text safe'; text.textContent='ALL CLEAR';
+      sub.textContent='All workers compliant';
+    }
+
+    const rate = s.total_frames > 0 ? Math.round(s.violation_count/s.total_frames*100)+'%' : '0%';
+    document.getElementById('stat-violations').textContent  = s.violation_count;
+    document.getElementById('stat-total').textContent       = s.total_frames;
+    document.getElementById('stat-rate').textContent        = rate;
+    document.getElementById('stat-screenshots').textContent = s.screenshots_saved;
+
+    for (const [cls, cnt] of Object.entries(s.detections)) {
+      const el = document.getElementById('count-'+cls);
+      if (el) el.textContent = cnt;
+    }
+
+    // Show video ended overlay
+    if (s.video_ended && !videoEndedShown) {
+      videoEndedShown = true;
+      document.getElementById('ov-total').textContent      = s.total_frames;
+      document.getElementById('ov-violations').textContent = s.violation_count;
+      document.getElementById('ov-rate').textContent       = rate;
+      document.getElementById('video-ended-overlay').classList.add('visible');
+    }
+
+    const vh = data.violation_history;
+    violationsChart.data.labels = vh.map(h=>h.time);
+    violationsChart.data.datasets[0].data = vh.map(h=>h.value);
+    violationsChart.update('none');
+
+    if (data.detection_history.length > 0) {
+      const det = data.detection_history[0].detections;
+      detectionsChart.data.datasets[0].data = classes.map(c=>det[c]||0);
+      detectionsChart.update('none');
+    }
+  } catch(e) {}
+}
+setInterval(fetchStats, 500); fetchStats();
+
+async function fetchScreenshots() {
+  try {
+    const res = await fetch('/screenshots');
+    const data = await res.json();
+    const list = document.getElementById('screenshots-list');
+    if (!data.files.length) {
+      list.innerHTML = '<div style="color:#4a6a8a;font-size:10px;font-style:italic;">No violations captured yet</div>';
+    } else {
+      list.innerHTML = data.files.map(f=>`<div class="screenshot-item">📸 ${f}</div>`).join('');
+    }
+  } catch(e) {}
+}
+setInterval(fetchScreenshots, 3000); fetchScreenshots();
+
+async function generateReport() {
+  const btn    = document.querySelector('.btn-report');
+  const status = document.getElementById('report-status');
+  btn.textContent = '⏳ Generating...';
+  btn.disabled    = true;
+  status.textContent = '';
+
+  try {
+    const res  = await fetch('/generate_report', {method:'POST'});
+    const data = await res.json();
+    if (data.success) {
+      status.textContent = '✅ Report ready! Downloading...';
+      window.location.href = '/download_report/' + data.filename;
+      btn.textContent = '📊 Generate Excel Report';
+      btn.disabled    = false;
+    } else {
+      status.textContent = '❌ Error: ' + data.error;
+      btn.textContent = '📊 Generate Excel Report';
+      btn.disabled    = false;
+    }
+  } catch(e) {
+    status.textContent = '❌ Failed to generate report';
+    btn.textContent = '📊 Generate Excel Report';
+    btn.disabled    = false;
+  }
+}
+
+let streaming = true;
+async function toggleStream() {
+  const btn = document.getElementById('stop-btn');
+  if (streaming) {
+    await fetch('/stop_stream',{method:'POST'});
+    streaming=false; btn.textContent='▶ Resume'; btn.className='btn btn-success';
+  } else {
+    await fetch('/start_stream',{method:'POST'});
+    streaming=true; btn.textContent='⏸ Pause'; btn.className='btn btn-danger';
+    document.getElementById('video-feed').src='/video_feed?'+Date.now();
+  }
+}
+
+async function switchWebcam() {
+  videoEndedShown = false;
+  document.getElementById('video-ended-overlay').classList.remove('visible');
+  await fetch('/use_webcam',{method:'POST'});
+  document.getElementById('source-label').textContent='Source: Webcam';
+  document.getElementById('video-feed').src='/video_feed?'+Date.now();
+}
+
+async function uploadVideo(input) {
+  const file=input.files[0]; if(!file) return;
+  videoEndedShown = false;
+  document.getElementById('video-ended-overlay').classList.remove('visible');
+  document.getElementById('report-status').textContent = '';
+  const fd=new FormData(); fd.append('video',file);
+  const res=await fetch('/upload_video',{method:'POST',body:fd});
+  const data=await res.json();
+  if(data.success){
+    document.getElementById('source-label').textContent='Source: '+file.name;
+    document.getElementById('video-feed').src='/video_feed?'+Date.now();
+  }
+}
+
+async function resetStats() {
+  videoEndedShown = false;
+  document.getElementById('video-ended-overlay').classList.remove('visible');
+  document.getElementById('report-status').textContent = '';
+  await fetch('/reset_stats',{method:'POST'});
+}
+</script>
+</body>
+</html>
