@@ -1,0 +1,30 @@
+ 
+# Model weights - too large for GitHub
+best.pt
+*.pt
+*.weights
+
+# Datasets - never upload
+datasets/
+data/
+
+# Video files
+*.mp4
+*.avi
+
+# Auto-generated folders
+screenshots/
+uploads/
+reports/
+runs/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+
+# Environment
+.env
+venv/
+env/
