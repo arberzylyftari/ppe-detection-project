@@ -148,16 +148,25 @@ def generate_frames():
         h, w = annotated.shape[:2]
         overlay  = annotated.copy()
 
+        # Responsive banner - scales with frame width (handles portrait phone videos)
+        banner_h   = max(36, int(h * 0.09))
+        font_scale = max(0.45, min(1.1, w / 480))
+        font_thick = max(1, int(font_scale * 1.8))
+
         if violation:
-            cv2.rectangle(overlay, (0, 0), (w, 60), (0, 0, 200), -1)
-            cv2.addWeighted(overlay, 0.6, annotated, 0.4, 0, annotated)
-            cv2.putText(annotated, '  VIOLATION DETECTED',
-                        (10, 42), cv2.FONT_HERSHEY_DUPLEX, 1.2, (255,255,255), 2)
+            label = 'VIOLATION DETECTED'
+            color = (0, 0, 200)
         else:
-            cv2.rectangle(overlay, (0, 0), (w, 60), (0, 180, 0), -1)
-            cv2.addWeighted(overlay, 0.6, annotated, 0.4, 0, annotated)
-            cv2.putText(annotated, '  ALL CLEAR - COMPLIANT',
-                        (10, 42), cv2.FONT_HERSHEY_DUPLEX, 1.2, (255,255,255), 2)
+            label = 'ALL CLEAR'
+            color = (0, 160, 0)
+
+        cv2.rectangle(overlay, (0, 0), (w, banner_h), color, -1)
+        cv2.addWeighted(overlay, 0.65, annotated, 0.35, 0, annotated)
+        (tw, th), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_DUPLEX, font_scale, font_thick)
+        tx = max(6, (w - tw) // 2)
+        ty = int(banner_h * 0.72)
+        cv2.putText(annotated, label, (tx, ty),
+                    cv2.FONT_HERSHEY_DUPLEX, font_scale, (255, 255, 255), font_thick)
 
         # Auto screenshot
         if violation and (current_time - last_screenshot_time) > 5:

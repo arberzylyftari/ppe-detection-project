@@ -307,7 +307,7 @@
     <!-- Left col -->
     <div class="left-col">
       <div class="panel-header">
-        <span class="panel-title">📹 Live Detection Feed</span>
+        <span class="panel-title">Live Detection Feed</span>
         <span style="font-size:10px;color:#4a6a8a;" id="source-label">Source: Webcam</span>
       </div>
 
@@ -316,7 +316,7 @@
 
         <!-- Video ended overlay -->
         <div id="video-ended-overlay">
-          <div class="ended-title">🎬 Video Analysis Complete</div>
+          <div class="ended-title">Analysis Complete</div>
           <div class="ended-sub">All frames processed. Summary below.</div>
 
           <div class="ended-stats">
@@ -349,20 +349,20 @@
       </div>
 
       <div class="controls">
-        <button class="btn btn-success"   onclick="switchWebcam()">📷 Webcam</button>
-        <button class="btn btn-primary"   onclick="document.getElementById('upload-input').click()">📁 Upload Video</button>
+        <button class="btn btn-success"   onclick="switchWebcam()">Webcam</button>
+        <button class="btn btn-primary"   onclick="document.getElementById('upload-input').click()">Upload Video</button>
         <input type="file" id="upload-input" accept="video/*" onchange="uploadVideo(this)" />
         <button class="btn btn-danger"    id="stop-btn" onclick="toggleStream()">⏸ Pause</button>
-        <button class="btn btn-secondary" onclick="resetStats()">🔄 Reset</button>
+        <button class="btn btn-secondary" onclick="resetStats()">Reset</button>
       </div>
 
       <div class="charts-row">
         <div class="chart-panel">
-          <div class="panel-header"><span class="panel-title">📈 Violations Over Time</span></div>
+          <div class="panel-header"><span class="panel-title">Violations Over Time</span></div>
           <div class="chart-canvas-wrap"><canvas id="violations-chart"></canvas></div>
         </div>
         <div class="chart-panel">
-          <div class="panel-header"><span class="panel-title">📊 Detections Per Class</span></div>
+          <div class="panel-header"><span class="panel-title">Detections Per Class</span></div>
           <div class="chart-canvas-wrap"><canvas id="detections-chart"></canvas></div>
         </div>
       </div>
@@ -377,7 +377,7 @@
         <div class="status-sub" id="status-sub">All workers compliant</div>
       </div>
 
-      <div class="panel-header"><span class="panel-title">📊 Session Stats</span></div>
+      <div class="panel-header"><span class="panel-title">Session Stats</span></div>
       <div class="stats-grid-inner">
         <div class="stat-cell"><div class="stat-value" id="stat-violations">0</div><div class="stat-label">Violation Frames</div></div>
         <div class="stat-cell"><div class="stat-value" id="stat-total">0</div><div class="stat-label">Total Frames</div></div>
@@ -385,7 +385,7 @@
         <div class="stat-cell"><div class="stat-value" id="stat-screenshots">0</div><div class="stat-label">Saved Alerts</div></div>
       </div>
 
-      <div class="panel-header" style="margin-top:1px;"><span class="panel-title">🎯 Current Detections</span></div>
+      <div class="panel-header" style="margin-top:1px;"><span class="panel-title">Current Detections</span></div>
       <div class="class-list">
         {% for cls in classes %}
         <div class="class-row">
@@ -397,7 +397,7 @@
       </div>
 
       <div class="screenshots-section">
-        <div class="section-title">📸 Recent Violation Screenshots</div>
+        <div class="section-title">Recent Violation Screenshots</div>
         <div id="screenshots-list">
           <div style="color:#4a6a8a;font-size:10px;font-style:italic;">No violations captured yet</div>
         </div>
@@ -509,7 +509,7 @@ async function fetchScreenshots() {
     if (!data.files.length) {
       list.innerHTML = '<div style="color:#4a6a8a;font-size:10px;font-style:italic;">No violations captured yet</div>';
     } else {
-      list.innerHTML = data.files.map(f=>`<div class="screenshot-item">📸 ${f}</div>`).join('');
+      list.innerHTML = data.files.map(f=>`<div class="screenshot-item">${f}</div>`).join('');
     }
   } catch(e) {}
 }
