@@ -1,5 +1,8 @@
 # Construction Site PPE Detection System
 
+## Presentation
+[View Project Presentation](https://canva.link/se9rh34xm6x0v0p)
+
 Real-time Personal Protective Equipment detection for construction sites using YOLOv8s.
 Detects 9 PPE classes simultaneously from webcam or video feed, with live dashboard and Power BI reporting.
 
