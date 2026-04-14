@@ -190,10 +190,10 @@ def generate_frames():
 
             vcount = sum(detections[c] for c in VIOLATION_CLASSES)
             violation_history.append({'time': now_str, 'value': vcount})
-            if len(violation_history) > 60:
+            if len(violation_history) > 2000:
                 violation_history.pop(0)
             detection_history.append({'time': now_str, 'detections': detections.copy()})
-            if len(detection_history) > 60:
+            if len(detection_history) > 2000:
                 detection_history.pop(0)
 
             # Log every 5th frame for report (keeps file small)
